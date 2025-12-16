@@ -41,25 +41,33 @@
         // SYNTAX CONSOLE - FINAL FIXED
         // ==========================================
         
-        let deckA_Data = [
-          { title: "TIME MEMORY", desc: "INTERACTING WITH THE FLOW", sub: "SYSTEM PROCESSING DATA STREAM A // " },
-          { title: "PAST FUTURE", desc: "RECONSTRUCTING FRAGMENTS", sub: "BUFFERING SEQUENCE INITIATED // " },
-          { title: "CORE LOGIC", desc: "SEARCHING FOR PATTERNS", sub: "ALGORITHM OPTIMIZATION RUNNING // " },
-          { title: "DEEP DIVE", desc: "NAVIGATING THE LAYERS", sub: "DEPTH ANALYSIS COMPLETE // " },
-          { title: "VOID SPACE", desc: "FILLING THE EMPTY VOID", sub: "NULL POINTER EXCEPTION ERROR // " }
-        ];
-        let deckB_Data = [
-          { title: "SOUND WAVE", desc: "VISUALIZING THE AUDIO", sub: "FREQUENCY MODULATION SYNC // " },
-          { title: "ECHO LOOP", desc: "REPEATING THE SIGNALS", sub: "FEEDBACK LOOP DETECTED // " },
-          { title: "NOISE GATE", desc: "FILTERING INTERFERENCE", sub: "THRESHOLD LIMIT REACHED // " },
-          { title: "PULSE RATE", desc: "SYNCHRONIZING BEATS", sub: "BPM MATCHING SEQUENCE // " },
-          { title: "FLAT LINE", desc: "TERMINATING PROCESS", sub: "CONNECTION TERMINATED // " }
-        ];
+let deckA_Data = [
+  // 1. 시간 (Time)
+  { title: "TIME IS",     desc: "THE ETERNAL FLOW",   sub: "SEQUENCE START // " },
+  // 2. 감각 (Senses)
+  { title: "CAN YOU",     desc: "OPEN YOUR EARS",     sub: "INPUT DETECTED // " },
+  // 3. 중력/비 (Text Rain Homage)
+  { title: "TEXT IS",     desc: "LIKE A RAIN DROP",   sub: "PHYSICS ENGINE // " },
+  // 4. 몰입 (Immersion)
+  { title: "DONT STOP",   desc: "KEEP THE RHYTHM",    sub: "LOOP ENGAGED // " },
+  // 5. 종료 (End)
+  { title: "FADE OUT",    desc: "INTO THE VOID",      sub: "SYSTEM EXIT // " }
+];
 
-        let deckA = { name: "DECK A", data: deckA_Data, index: 0, rotation: 0, targetRotation: 0, isLooping: false, visualMode: 1, sensors: [] };
-        let deckB = { name: "DECK B", data: deckB_Data, index: 0, rotation: 0, targetRotation: 0, isLooping: false, visualMode: 1, sensors: [] };
-        let crossFaderVal = 0.5;
-        let activeDeck = deckA;
+let deckB_Data = [
+  // 1. ...RUNNING OUT
+  { title: "RUNNING OUT", desc: "CATCH THE MOMENT",   sub: "SYNC COMPLETE // " },
+  // 2. ...FEEL THE BEAT
+  { title: "FEEL THE BEAT", desc: "LOUD AND CLEAR",   sub: "VOLUME MAX // " },
+  // 3. ...FALLING DOWN
+  { title: "FALLING DOWN", desc: "ON YOUR BODY",      sub: "GRAVITY ON // " },
+  // 4. ...THE MUSIC
+  { title: "THE MUSIC",   desc: "UNTIL THE DAWN",     sub: "TEMPO LOCKED // " },
+  // 5. ...TO BLACK
+  { title: "TO BLACK",    desc: "END OF STORY",       sub: "DISCONNECTED // " }
+];
+
+// 아래 deckA, deckB 생성 코드는 기존 그대로 두시면 됩니다.
         
         // Audio
         let mic;
