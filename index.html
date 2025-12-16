@@ -19,7 +19,7 @@
             user-select: none;
             -webkit-user-select: none;
             
-            /* 전체 화면 반전 트랜지션 (스페이스바용) */
+            /* 전체 화면 반전 트랜지션 */
             transition: filter 0.1s linear; 
         }
         
@@ -30,14 +30,15 @@
 
         canvas {
             display: block;
-            cursor: none; /* 기본 마우스 커서 숨김 (p5 커서 사용) */
+            cursor: none; /* 기본 마우스 커서 숨김 */
         }
     </style>
 </head>
 <body>
+
     <script>
         // ==========================================
-        // SYNTAX CONSOLE - FINAL LENS EFFECT
+        // SYNTAX CONSOLE - FINAL FIXED
         // ==========================================
         
         let deckA_Data = [
@@ -85,9 +86,9 @@
             angleMode(DEGREES);
             rectMode(CENTER);
             
-            // 폰트 설정
+            // [수정] 여기서 BOLD를 빼고 기본으로 설정
             textFont("Arial");
-            textStyle(BOLD);
+            textStyle(NORMAL); 
 
             try {
                 mic = new p5.AudioIn();
@@ -155,25 +156,23 @@
             drawMixer(DESIGN_W / 2, DESIGN_H / 2, DESIGN_W * 0.2, DESIGN_H * 0.7, refSize);
             pop();
 
-            // [2. 타이틀 그리기] (HTML 대신 Canvas에 직접 그리기)
-            // 커서 아래에 있어야 커서 효과가 먹힘
+            // [2. 타이틀 그리기] (Canvas 내부)
             push();
-            resetMatrix(); // 좌표 초기화 (전체 화면 기준)
-            fill(0); // 완전 검정
+            resetMatrix(); 
+            fill(0); 
             noStroke();
             textAlign(CENTER, BOTTOM);
-            textSize(width * 0.10); // 10vw와 동일한 효과
+            textSize(width * 0.10); 
+            textStyle(BOLD); // 타이틀만 굵게 유지
             text("SYNTAX CONSOLE", width / 2, height - 30);
             pop();
 
-            // [3. 커서 그리기] (맨 위에 그려서 아래 내용 반전시킴)
+            // [3. 커서 그리기] (Difference 모드)
             if (touches.length > 0) {
-                // 터치 시 시각적 피드백
                 fill(0, 50); noStroke(); ellipse(mouseX, mouseY, 40);
                 stroke(0, 20); strokeWeight(2);
                 line(0, height * 0.75, width, height * 0.75);
             } else {
-                // 마우스일 때 반전 커서
                 drawInvertedCursor();
             }
 
@@ -192,7 +191,7 @@
         }
 
         function keyPressed() {
-            if (keyCode === 32) { // SPACE
+            if (keyCode === 32) { 
                 document.body.classList.add('global-invert');
             }
             if (keyCode === 65) changeTrack(deckA, 0); if (keyCode === 83) changeTrack(deckA, 1);
@@ -203,7 +202,7 @@
         }
 
         function keyReleased() {
-            if (keyCode === 32) { // SPACE
+            if (keyCode === 32) { 
                 document.body.classList.remove('global-invert');
             }
         }
@@ -375,6 +374,10 @@
             for (let sensor of deck.sensors) { ellipse(sensor.x, sensor.y, sensor.curr); fill(0); noStroke(); ellipse(sensor.x, sensor.y, s * 0.005); noFill(); stroke(0); }
             push(); rotate(deck.rotation);
             fill(C_TEXT); noStroke(); textAlign(CENTER, CENTER);
+            
+            // [수정] 원판 텍스트는 얇게(NORMAL) 보장
+            textStyle(NORMAL); 
+            
             let wheelTextSize = s * 0.045; 
             textSize(wheelTextSize);
             drawTextRing(deck.data[deck.index].title, s * 0.18, wheelTextSize, deck, s);
@@ -452,13 +455,7 @@
         }
 
         function drawInvertedCursor() { 
-            // [핵심] 커서만 반전 효과 (Difference Blend Mode)
-            push(); 
-            blendMode(DIFFERENCE); 
-            noStroke(); 
-            fill(255); 
-            ellipse(mouseX, mouseY, 30); 
-            pop(); 
+            push(); blendMode(DIFFERENCE); noStroke(); fill(255); ellipse(mouseX, mouseY, 30); pop(); 
         }
         
         function mouseWheel(e) {
