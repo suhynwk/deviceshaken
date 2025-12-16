@@ -100,17 +100,13 @@ let drawOffY = 0;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  // 커서 숨김 (모바일에서는 의미 없으나 PC에서는 숨김)
-  // noCursor();
-
   angleMode(DEGREES);
   rectMode(CENTER);
   textFont("Arial");
 
-  // [수정] 타이틀을 캔버스 그림이 아닌 HTML DOM 요소로 생성 (위치 고정 및 터치 통과를 위해)
+  // [타이틀 HTML 생성]
   let titleDiv = createDiv("SYNTAX CONSOLE");
   titleDiv.id("syntaxconsole");
-  // CSS 스타일 적용 (JS에서 직접 주입)
   titleDiv.style("position", "fixed");
   titleDiv.style("bottom", "0");
   titleDiv.style("left", "0");
@@ -119,10 +115,10 @@ function setup() {
   titleDiv.style("padding-bottom", "20px");
   titleDiv.style("font-family", "Arial, sans-serif");
   titleDiv.style("font-weight", "bold");
-  titleDiv.style("font-size", "5vw"); // 반응형 폰트 크기
+  titleDiv.style("font-size", "5vw");
   titleDiv.style("color", "#282828");
   titleDiv.style("z-index", "9999");
-  titleDiv.style("pointer-events", "none"); // ★ 핵심: 터치가 글자를 뚫고 지나감
+  titleDiv.style("pointer-events", "none");
   titleDiv.style("user-select", "none");
 
   mic = new p5.AudioIn();
@@ -189,6 +185,7 @@ function draw() {
   let deckY = DESIGN_H * 0.35;
   let scaleBase = min(deckW, deckH) * 0.8;
 
+  // Draw Decks
   drawDeck(
     DESIGN_W * 0.25,
     deckY,
@@ -215,77 +212,127 @@ function draw() {
     refSize
   );
 
-  // [수정] drawBottomTitle() 삭제됨 -> HTML DOM으로 대체
-
   pop();
 
-  // 5. Cursor
-  // 모바일이 아닐 때만 커서 그리기 (선택 사항)
-  // if (touches.length === 0) {
-  drawInvertedCursor();
-  // }
+  // 5. Touch Debug & Cursor
+  if (touches.length > 0) {
+    // 터치 중일 때 가이드라인 표시
+    drawTouchGuidelines();
+
+    // 터치 지점 표시
+    noStroke();
+    fill(0, 50);
+    ellipse(mouseX, mouseY, 50);
+  } else {
+    drawInvertedCursor();
+  }
 
   if (keyIsDown(32)) {
     filter(INVERT);
   }
 }
 
-// --------------------------------------------------------
-// Mouse & Touch Logic (Updated for Mobile)
-// --------------------------------------------------------
-
-function getVirtualMouse() {
-  // 실제 마우스/터치 좌표를 1600x900 기준 좌표로 변환
-  let vx = (mouseX - drawOffX) / drawScale;
-  let vy = (mouseY - drawOffY) / drawScale;
-  return { x: vx, y: vy };
+function drawTouchGuidelines() {
+  // 화면을 나누는 선을 흐릿하게 표시하여 영역을 알려줌
+  stroke(0, 20);
+  strokeWeight(2);
+  // 중앙 세로선
+  line(width / 2, 0, width / 2, height * 0.75);
+  // 하단 가로선 (크로스페이더 영역)
+  line(0, height * 0.75, width, height * 0.75);
 }
 
-// [추가] 모바일 드래그 인터랙션 (휠 대체)
+// --------------------------------------------------------
+// ★ SIMPLIFIED TOUCH LOGIC (ZONE BASED) ★
+// --------------------------------------------------------
+
+// P5.js에서 터치 드래그는 mouseDragged와 touchMoved 모두에서 잡힙니다.
+// 가장 확실한 방법은 touchMoved를 사용하는 것입니다.
+
 function touchMoved() {
-  // 브라우저 기본 스크롤 방지
-  if (touches.length > 1) return;
+  // 1. 기본 브라우저 스크롤 막기 (필수)
 
-  // Y축 움직임 감지 (스크래칭)
-  let speed = (mouseY - pmouseY) * 0.5;
+  // 2. 움직임 감지 (P5.js 내장 변수 사용)
+  // mouseY: 현재 Y위치, pmouseY: 직전 Y위치
+  // 이 차이(diff)가 곧 손가락의 빠르기와 방향입니다.
+  let diffY = mouseY - pmouseY;
+  let diffX = mouseX - pmouseX;
 
-  let influenceA = map(crossFaderVal, 0.6, 0.0, 0, 1, true);
-  let influenceB = map(crossFaderVal, 0.4, 1.0, 0, 1, true);
+  // 3. 영역별 기능 실행
 
-  if (influenceA > 0) deckA.targetRotation += speed * influenceA;
-  if (influenceB > 0) deckB.targetRotation += speed * influenceB;
-
-  // 하단부 터치 후 가로(X축) 드래그 시 크로스페이더 조절
-  if (mouseY > height * 0.6) {
-    let xSpeed = (mouseX - pmouseX) * 0.002;
-    // 움직임이 있을 때만 업데이트
-    if (abs(xSpeed) > 0) {
-      crossFaderVal += xSpeed;
+  // [ZONE C] 하단 25% 영역: 크로스페이더
+  if (mouseY > height * 0.75) {
+    // 가로 움직임만 반영
+    if (abs(diffX) > 0) {
+      crossFaderVal += diffX * 0.002;
       crossFaderVal = constrain(crossFaderVal, 0, 1);
       if (frameCount % 5 === 0) playNoise();
     }
   }
+  // [ZONE A & B] 상단 75% 영역: 덱 스크래칭
+  else {
+    // 세로 움직임(diffY)을 회전에 반영
+    // 감도를 1.5배로 설정하여 쓱쓱 잘 돌아가게 함
+    let rotSpeed = diffY * 1.5;
+
+    // 화면 왼쪽 절반 -> Deck A
+    if (mouseX < width / 2) {
+      deckA.targetRotation += rotSpeed;
+    }
+    // 화면 오른쪽 절반 -> Deck B
+    else {
+      deckB.targetRotation += rotSpeed;
+    }
+  }
+
+  // false를 리턴해야 안드로이드/iOS에서 화면이 끌려다니지 않음
+  return false;
+}
+
+// PC 마우스 테스트를 위해 mouseDragged에도 동일 로직 적용
+function mouseDragged() {
+  // 터치가 아닐 때만 실행 (중복 실행 방지)
+  if (touches.length === 0) {
+    touchMoved();
+  }
+  return false;
+}
+
+function touchStarted() {
+  // 오디오 컨텍스트 시작 (모바일 필수)
+  if (getAudioContext().state !== "running") {
+    userStartAudio();
+  }
+  if (mic) {
+    try {
+      mic.start();
+    } catch (e) {}
+  }
+
+  // 탭(터치)했을 때 버튼 클릭 처리
+  handleTap(mouseX, mouseY);
 
   return false;
 }
 
-// [수정] 마우스/터치 클릭 시 버튼 동작 처리
 function mousePressed() {
-  userStartAudio();
-  if (mic) mic.start();
+  if (touches.length === 0) {
+    handleTap(mouseX, mouseY);
+  }
+}
+
+// 클릭/탭 좌표 처리 함수
+function handleTap(mx, my) {
   playClick();
 
-  let vMouse = getVirtualMouse();
-  // 중앙(0,0) 기준 좌표가 아닌 좌상단(0,0) 기준 좌표값 그대로 사용 (draw 함수 내 translate 고려)
-  // 단, draw 함수에서는 translate(drawOffX, drawOffY) 후 scale(drawScale)을 했으므로
-  // vMouse는 이미 스케일과 오프셋이 반영된 1600x900 공간의 좌표임.
+  // 좌표 변환 (Scale 적용된 캔버스 좌표계로)
+  let vx = (mx - drawOffX) / drawScale;
+  let vy = (my - drawOffY) / drawScale;
 
-  // 믹서나 덱의 좌표계는 DESIGN_W/2 를 중심으로 그려지는 경우가 많음.
-  // 따라서 거리 계산을 위해 로컬 좌표 계산
-  let localX = vMouse.x - DESIGN_W / 2;
-  let localY = vMouse.y - DESIGN_H / 2;
+  let localX = vx - DESIGN_W / 2;
+  let localY = vy - DESIGN_H / 2;
 
-  // 1. Mixer Buttons (Visual Mode)
+  // 1. 믹서 버튼 (중앙)
   let mh = DESIGN_H * 0.7;
   let mw = DESIGN_W * 0.2;
   let ky_start = -mh * 0.3;
@@ -297,8 +344,8 @@ function mousePressed() {
     let kx = col === 0 ? -mw * 0.25 : mw * 0.25;
     let ky = ky_start + row * k_gap;
 
-    // 믹서 버튼 히트 박스
-    if (dist(localX, localY, kx, ky) < 30) {
+    // 히트박스 크게 (60px)
+    if (dist(localX, localY, kx, ky) < 60) {
       activeDeck.visualMode = i + 1;
       deckA.sensors = [];
       deckB.sensors = [];
@@ -307,32 +354,25 @@ function mousePressed() {
     }
   }
 
-  // 2. Deck Buttons (Track Change)
-  // Deck 위치와 크기 (drawDeck 함수와 동일한 로직)
+  // 2. 덱 트랙 변경 버튼
+  // Deck A/B 영역 계산
   let deckW = DESIGN_W * 0.35;
   let deckH = DESIGN_H * 0.6;
-  // 덱의 중심 Y좌표 (DESIGN_H 기준) -> 로컬 좌표로 변환 필요
-  // drawDeck 호출 시: y = DESIGN_H * 0.35
-  // 우리가 사용하는 localY는 화면 중앙이 (0,0)이므로:
   let deckCenterY = DESIGN_H * 0.35 - DESIGN_H / 2;
-
   let btnGap = deckW * 0.2;
   let btnY_Offset = -deckH * 0.4;
 
-  // Deck A Center X (로컬 좌표)
   let deckACenterX = DESIGN_W * 0.25 - DESIGN_W / 2;
-  // Deck B Center X (로컬 좌표)
   let deckBCenterX = DESIGN_W * 0.75 - DESIGN_W / 2;
 
   function checkDeckBtns(deck, centerX) {
     for (let i = 0; i < 4; i++) {
       let bx = (i - 1.5) * btnGap;
-      // 버튼의 절대 위치 (로컬 좌표계 상)
       let btnAbsX = centerX + bx;
       let btnAbsY = deckCenterY + btnY_Offset;
 
-      if (dist(localX, localY, btnAbsX, btnAbsY) < 40) {
-        // 터치 범위 넉넉하게
+      // 히트박스 크게 (70px)
+      if (dist(localX, localY, btnAbsX, btnAbsY) < 70) {
         changeTrack(deck, i);
         return true;
       }
@@ -345,7 +385,6 @@ function mousePressed() {
   }
 }
 
-// 마우스 휠 (PC용)
 function mouseWheel(e) {
   let speed = e.deltaY * 0.5;
   let influenceA = map(crossFaderVal, 0.6, 0.0, 0, 1, true);
@@ -362,7 +401,6 @@ function mouseWheel(e) {
   return false;
 }
 
-// 키보드 입력 (PC용)
 function keyPressed() {
   if (keyCode === 65) changeTrack(deckA, 0);
   if (keyCode === 83) changeTrack(deckA, 1);
@@ -402,14 +440,12 @@ function updateSensors(deck, s) {
     let mode = deck.visualMode;
 
     if (mode === 1) {
-      // Cross
       let dists = [r1, r2, r3],
         angles = [0, 90, 180, 270];
       for (let d of dists)
         for (let a of angles)
           deck.sensors.push(createSensor(d * cos(a), d * sin(a), baseSize));
     } else if (mode === 2) {
-      // Ring
       let counts = [8, 12, 16],
         radii = [r1, r2, r3];
       for (let k = 0; k < 3; k++)
@@ -420,7 +456,6 @@ function updateSensors(deck, s) {
           );
         }
     } else if (mode === 3) {
-      // Scatter
       randomSeed(999);
       for (let i = 0; i < 25; i++) {
         let rChoice = random([r1, r2, r3]),
@@ -429,7 +464,6 @@ function updateSensors(deck, s) {
         deck.sensors.push(createSensor(r * cos(a), r * sin(a), baseSize));
       }
     } else if (mode === 4) {
-      // Triple Arc
       let count = 12;
       for (let k = 0; k < 3; k++) {
         let r = [r1, r2, r3][k];
@@ -439,7 +473,6 @@ function updateSensors(deck, s) {
         }
       }
     } else if (mode === 5) {
-      // Spiral
       let count = 36;
       for (let i = 0; i < count; i++) {
         let r = map(i, 0, count, s * 0.1, s * 0.45),
@@ -447,7 +480,6 @@ function updateSensors(deck, s) {
         deck.sensors.push(createSensor(r * cos(a), r * sin(a), baseSize));
       }
     } else if (mode === 6) {
-      // Grid
       let grid = s * 0.1;
       for (let x = -s * 0.4; x <= s * 0.4; x += grid)
         for (let y = -s * 0.4; y <= s * 0.4; y += grid) {
@@ -502,7 +534,6 @@ function drawDeck(x, y, w, h, deck, btnLabels, scaleBase) {
 
   let btnY = -h * 0.4;
   let btnGap = w * 0.2;
-  // KeyCodes only for PC visual feedback
   let keyCodes = deck.name === "DECK A" ? [65, 83, 68, 70] : [72, 74, 75, 76];
 
   for (let i = 0; i < 4; i++) {
