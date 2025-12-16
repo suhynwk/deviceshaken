@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SYNTAX CONSOLE</title>
+    <title>SYNTAX CONSOLE - BODY INTERACTION</title>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/addons/p5.sound.min.js"></script>
@@ -13,7 +13,7 @@
             margin: 0;
             padding: 0;
             overflow: hidden; /* 스크롤바 제거 */
-            background-color: #FAFAFA;
+            background-color: #111; /* 비디오 로딩 전 배경색 */
             touch-action: none; /* 모바일 제스처 막기 */
             overscroll-behavior: none;
             user-select: none;
@@ -23,6 +23,22 @@
             transition: filter 0.1s linear; 
         }
         
+        /* [추가됨] 웹캠 배경 스타일링 (Text Rain 감성) */
+        #webcam-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1; /* 캔버스 뒤로 배치 */
+            
+            /* 거울 모드 & 흑백/고대비 필터 */
+            transform: scaleX(-1);
+            filter: grayscale(100%) contrast(150%) brightness(60%) blur(4px);
+            opacity: 0.5; /* 배경과 섞이게 투명도 조절 */
+        }
+
         /* 스페이스바 누를 때 전체 반전 */
         body.global-invert {
             filter: invert(1);
@@ -36,45 +52,37 @@
 </head>
 <body>
 
+    <video id="webcam-bg" autoplay muted playsinline></video>
+
     <script>
         // ==========================================
-        // SYNTAX CONSOLE - FINAL FIXED
+        // SYNTAX CONSOLE - WITH WEBCAM BACKGROUND
         // ==========================================
         
-let deckA_Data = [
-  // 1. 시간 (Time)
-  { title: "TIME IS",     desc: "THE ETERNAL FLOW",   sub: "SEQUENCE START // " },
-  // 2. 감각 (Senses)
-  { title: "CAN YOU",     desc: "OPEN YOUR EARS",     sub: "INPUT DETECTED // " },
-  // 3. 중력/비 (Text Rain Homage)
-  { title: "TEXT IS",     desc: "LIKE A RAIN DROP",   sub: "PHYSICS ENGINE // " },
-  // 4. 몰입 (Immersion)
-  { title: "DONT STOP",   desc: "KEEP THE RHYTHM",    sub: "LOOP ENGAGED // " },
-  // 5. 종료 (End)
-  { title: "FADE OUT",    desc: "INTO THE VOID",      sub: "SYSTEM EXIT // " }
-];
+        /* [주제: The Body as a Canvas for Text] */
 
-let deckB_Data = [
-  // 1. ...RUNNING OUT
-  { title: "RUNNING OUT", desc: "CATCH THE MOMENT",   sub: "SYNC COMPLETE // " },
-  // 2. ...FEEL THE BEAT
-  { title: "FEEL THE BEAT", desc: "LOUD AND CLEAR",   sub: "VOLUME MAX // " },
-  // 3. ...FALLING DOWN
-  { title: "FALLING DOWN", desc: "ON YOUR BODY",      sub: "GRAVITY ON // " },
-  // 4. ...THE MUSIC
-  { title: "THE MUSIC",   desc: "UNTIL THE DAWN",     sub: "TEMPO LOCKED // " },
-  // 5. ...TO BLACK
-  { title: "TO BLACK",    desc: "END OF STORY",       sub: "DISCONNECTED // " }
-];
+        let deckA_Data = [
+          { title: "MY BODY",     desc: "IS A CANVAS",          sub: "DETECTING SHAPE // " },
+          { title: "THE WORDS",   desc: "HAVE GRAVITY",         sub: "CALCULATING MASS // " },
+          { title: "DIGITAL",     desc: "BECOMES PHYSICAL",     sub: "RENDERING TEXTURE // " },
+          { title: "SHADOW",      desc: "HOLDS THE TIME",       sub: "CONTRAST RATIO // " },
+          { title: "EXTEND",      desc: "YOUR HAND NOW",        sub: "TRACKING MOTION // " }
+        ];
 
-// 아래 deckA, deckB 생성 코드는 기존 그대로 두시면 됩니다.
-                let deckA = { name: "DECK A", data: deckA_Data, index: 0, rotation: 0, targetRotation: 0, isLooping: false, visualMode: 1, sensors: [] };
+        let deckB_Data = [
+          { title: "BECOMES FORM", desc: "IN THIS SPACE",       sub: "MORPHING GEO // " },
+          { title: "FALL LIKE RAIN", desc: "ON YOUR SKIN",      sub: "PARTICLE DROP // " },
+          { title: "TOUCHES ME",  desc: "COLD AND SHARP",       sub: "HAPTIC FEEDBACK // " },
+          { title: "CATCHES FLOW", desc: "STOP THE STREAM",     sub: "LIGHT SOURCE // " },
+          { title: "THE MOMENT",  desc: "BEFORE IT FADES",      sub: "CAPTURE FRAME // " }
+        ];
 
+        let deckA = { name: "DECK A", data: deckA_Data, index: 0, rotation: 0, targetRotation: 0, isLooping: false, visualMode: 1, sensors: [] };
         let deckB = { name: "DECK B", data: deckB_Data, index: 0, rotation: 0, targetRotation: 0, isLooping: false, visualMode: 1, sensors: [] };
 
         let crossFaderVal = 0.5;
-
         let activeDeck = deckA;
+
         // Audio
         let mic;
         let oscClick, envClick, oscTone, envTone, engineOsc, noiseOsc, noiseEnv;
@@ -100,7 +108,6 @@ let deckB_Data = [
             angleMode(DEGREES);
             rectMode(CENTER);
             
-            // [수정] 여기서 BOLD를 빼고 기본으로 설정
             textFont("Arial");
             textStyle(NORMAL); 
 
@@ -131,7 +138,8 @@ let deckB_Data = [
         }
 
         function draw() {
-            background(C_BG);
+            // [수정됨] 배경을 투명하게 처리하여 뒤의 Video 태그가 보이게 함
+            clear(); 
 
             let scaleW = width / DESIGN_W;
             let scaleH = height / DESIGN_H;
@@ -170,18 +178,20 @@ let deckB_Data = [
             drawMixer(DESIGN_W / 2, DESIGN_H / 2, DESIGN_W * 0.2, DESIGN_H * 0.7, refSize);
             pop();
 
-            // [2. 타이틀 그리기] (Canvas 내부)
+            // [2. 타이틀 그리기]
             push();
             resetMatrix(); 
+            // 텍스트가 영상 위에서도 잘 보이도록 흰색 테두리나 색상 조정 가능하지만
+            // 현재 컨셉상 검정(C_TEXT) 유지하거나 상황 봐서 흰색으로 변경 고려
             fill(0); 
             noStroke();
             textAlign(CENTER, BOTTOM);
             textSize(width * 0.10); 
-            textStyle(BOLD); // 타이틀만 굵게 유지
+            textStyle(BOLD); 
             text("SYNTAX CONSOLE", width / 2, height - 30);
             pop();
 
-            // [3. 커서 그리기] (Difference 모드)
+            // [3. 커서 그리기]
             if (touches.length > 0) {
                 fill(0, 50); noStroke(); ellipse(mouseX, mouseY, 40);
                 stroke(0, 20); strokeWeight(2);
@@ -389,7 +399,6 @@ let deckB_Data = [
             push(); rotate(deck.rotation);
             fill(C_TEXT); noStroke(); textAlign(CENTER, CENTER);
             
-            // [수정] 원판 텍스트는 얇게(NORMAL) 보장
             textStyle(NORMAL); 
             
             let wheelTextSize = s * 0.045; 
@@ -480,6 +489,23 @@ let deckB_Data = [
         }
 
         function windowResized() { resizeCanvas(windowWidth, windowHeight); deckA.sensors = []; deckB.sensors = []; }
+
+        // [추가됨] 웹캠 시작 함수
+        async function startWebcam() {
+            const video = document.getElementById('webcam-bg');
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    video.srcObject = stream;
+                } catch (error) {
+                    console.error("카메라 접근 실패 (혹은 거부됨):", error);
+                }
+            }
+        }
+
+        // 페이지 로드 시 웹캠 실행
+        window.addEventListener('load', startWebcam);
+
     </script>
 </body>
 </html>
