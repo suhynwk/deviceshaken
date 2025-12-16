@@ -28,17 +28,18 @@
             left: 0;
             width: 100%;
             text-align: center;
-            padding-bottom: 30px; /* 바닥 여백 */
+            padding-bottom: 30px;
             font-family: Arial, sans-serif;
             font-weight: bold;
             
-            /* [수정] 타이틀 크기 대폭 확대 (5vw -> 12vw) */
-            font-size: 12vw; 
-            letter-spacing: -2px; /* 자간 좁혀서 단단하게 */
+            /* [수정] 한 줄 유지 및 사이즈 조정 */
+            white-space: nowrap; /* 절대 줄바꿈 하지 않음 */
+            font-size: 10vw;     /* 화면 폭에 맞춰 한 줄에 들어가는 최대 크기 */
+            letter-spacing: -2px; 
             
             color: #282828;
             z-index: 9999;
-            pointer-events: none; /* 클릭 통과 */
+            pointer-events: none;
             user-select: none;
             opacity: 0.9;
         }
@@ -342,7 +343,6 @@
             let keyCodes = deck.name === "DECK A" ? [65, 83, 68, 70] : [72, 74, 75, 76];
             for (let i = 0; i < 4; i++) {
                 let bx = (i - 1.5) * btnGap;
-                // [복구] 기존 비율 유지 (0.08, 텍스트 0.4)
                 drawRoundBtn(bx, btnY, min(w, h) * 0.08, keyCodes[i], btnLabels[i], deck, i);
             }
             drawKineticJogWheel(0, h * 0.15, scaleBase, deck);
@@ -355,8 +355,6 @@
             for (let sensor of deck.sensors) { ellipse(sensor.x, sensor.y, sensor.curr); fill(0); noStroke(); ellipse(sensor.x, sensor.y, s * 0.005); noFill(); stroke(0); }
             push(); rotate(deck.rotation);
             fill(C_TEXT); noStroke(); textAlign(CENTER, CENTER);
-            
-            // [복구] 기존 텍스트 사이즈 (s * 0.045)
             let wheelTextSize = s * 0.045; 
             textSize(wheelTextSize);
             drawTextRing(deck.data[deck.index].title, s * 0.18, wheelTextSize, deck, s);
@@ -386,7 +384,6 @@
                 let modeNum = i + 1; let isActive = activeDeck.visualMode === modeNum; let rot = isActive ? frameCount * 5 : -45;
                 drawKnob(kx, ky, knobSize, rot, isActive);
                 fill(150); noStroke(); 
-                // [복구] 기존 텍스트 사이즈 (refSize * 0.01)
                 textSize(refSize * 0.01); 
                 text(modeNum, kx, ky + knobSize * 0.8);
             }
@@ -410,7 +407,6 @@
             let ledCol = isPressed || isActive ? 150 : 240; fill(ledCol); noStroke(); ellipse(s * 0.8, -s * 0.8, s * 0.2);
             if (!isPressed) applyShadow(5, 2, 2); fill(C_PANEL); noStroke(); if (isPressed) translate(0, 1); ellipse(0, 0, s); clearShadow();
             fill(C_TEXT); 
-            // [복구] 기존 텍스트 사이즈 (s * 0.4)
             textSize(s * 0.4); 
             textAlign(CENTER, CENTER); text(label, 0, 0); pop();
         }
@@ -419,7 +415,6 @@
             let isPressed = keyIsDown(keyCodeNum); push(); translate(x, y); let ledCol = isPressed ? 200 : 240; fill(ledCol); noStroke(); ellipse(w / 2 + 5, -h / 2 + 5, 5);
             if (!isPressed) applyShadow(5, 2, 2); fill(C_PANEL); noStroke(); if (isPressed) translate(0, 1); rect(0, 0, w, h, 6); clearShadow();
             fill(C_TEXT); 
-            // [복구] 기존 텍스트 사이즈 (h * 0.4)
             textSize(h * 0.4); 
             textStyle(NORMAL); textAlign(CENTER, CENTER); text(label, 0, 0); pop();
         }
